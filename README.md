@@ -86,3 +86,53 @@
     </div>  
   </div>  
 </div>
+
+
+
+
+
+
+selectedFiles: File[] = [];
+
+fileSelection(event: any): void {
+  this.selectedFiles = Array.from(event.target.files); // store all files for display
+  this.processFiles();
+}
+
+onDrop(event: any): void {
+  if (this.showFileUploader) {
+    event.preventDefault();
+    event.stopPropagation();
+    this.selectedFiles = Array.from(event.dataTransfer.files);
+    this.processFiles();
+  }
+}
+
+processFiles(): void {
+  if (!this.selectedFiles || this.selectedFiles.length === 0) return;
+
+  let index = 0;
+
+  const uploadNext = () => {
+    if (index >= this.selectedFiles.length) {
+      // All files uploaded, reset to drag-and-drop
+      this.showUploadOpt = true;
+      this.selectedFiles = [];
+      return;
+    }
+
+    // Set current file for your existing logic
+    this.documentFile = this.selectedFiles[index];
+    this.documentFiles.emit(this.documentFile);
+
+    // Run your existing upload logic
+    this.isFileUploadingStarted = true;
+    this.getVirusScanBlobForScan(); // existing method
+
+    index++;
+    // Wait for current file to finish uploading before next
+    setTimeout(uploadNext, 500); // adjust delay if needed
+  };
+
+  uploadNext();
+}
