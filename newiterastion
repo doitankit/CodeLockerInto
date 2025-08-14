@@ -1,0 +1,57 @@
+<div *ngIf="showFileList" class="mt-3">
+  <table class="table table-bordered">
+    <thead>
+      <tr>
+        <th>File Name</th>
+        <th>Type</th>
+        <th>Size</th>
+        <th>Status</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let file of displayFiles">
+        <td>{{ file.name }}</td>
+        <td>{{ file.type }}</td>
+        <td>{{ file.size }}</td>
+        <td>{{ file.status }}</td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+fileSelection(event: any): void {
+  const files: FileList = event?.target?.files;
+  if (!files || files.length === 0) return;
+
+  this.selectedFiles = Array.from(files);
+  this.displayFiles = this.selectedFiles.map(file => ({
+    name: file.name,
+    type: file.type || 'Unknown',
+    size: file.size >= 1048576
+      ? (file.size / 1048576).toFixed(2) + ' MB'
+      : (file.size / 1024).toFixed(2) + ' KB',
+    status: 'Waiting for upload'
+  }));
+  this.showFileList = true;
+}
+
+onDrop(event: any): void {
+  if (!this.showFileUploader) return;
+  event.preventDefault();
+  event.stopPropagation();
+
+  const files: FileList = event?.dataTransfer?.files;
+  if (!files || files.length === 0) return;
+
+  this.selectedFiles = Array.from(files);
+  this.displayFiles = this.selectedFiles.map(file => ({
+    name: file.name,
+    type: file.type || 'Unknown',
+    size: file.size >= 1048576
+      ? (file.size / 1048576).toFixed(2) + ' MB'
+      : (file.size / 1024).toFixed(2) + ' KB',
+    status: 'Waiting for upload'
+  }));
+  this.showFileList = true;
+}
+
