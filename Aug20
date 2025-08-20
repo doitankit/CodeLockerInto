@@ -1,0 +1,49 @@
+onFilesSelected(event: any): void {
+  const files: File[] = Array.from(event.target.files);
+
+  // Keep your file properties
+  this.files = files.map(file => ({
+    file,
+    name: file.name,
+    size: file.size,
+    type: file.type,
+    status: 'pending'
+  }));
+
+  // Start sequential upload
+  this.uploadSequentially(0);
+}
+
+private uploadSequentially(index: number): void {
+  if (index >= this.files.length) {
+    console.log("All files processed");
+    return;
+  }
+
+  const fileData = this.files[index];
+  fileData.status = 'uploading';
+
+  // First create SAS token
+  this.createSasToken(fileData.file).subscribe({
+    next: (sasResponse) => {
+      // Then send file to virus scan blob
+      this.vorusscanblob(fileData.file, sasResponse).subscribe({
+        next: (res) => {
+          fileData.status = 'success';
+          console.log(`${fileData.name} uploaded successfully`, res);
+          this.uploadSequentially(index + 1); // move to next file
+        },
+        error: (err) => {
+          fileData.status = 'error';
+          console.error(`${fileData.name} failed to upload`, err);
+          this.uploadSequentially(index + 1); // still continue with next file
+        }
+      });
+    },
+    error: (err) => {
+      fileData.status = 'error';
+      console.error(`SAS token failed for ${fileData.name}`, err);
+      this.uploadSequentially(index + 1); // continue next
+    }
+  });
+}
