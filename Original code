@@ -1,0 +1,318 @@
+This is the Ts code analysis this the I'll send html and then ask you ti do something change the full code and send it to me.
+
+import Component, OnInit, Output, Event Emitter, Input, Inject) from '@angular/core': import (HttpClient, HttpParams) from '@angular/common/http';
+
+import (Observable, Subscription, interval, timer) from 'rxjs';
+
+import (ConfigurationService) from '../../../core/config/configuration/configuration.service':
+
+import (Anonymous Credential, BlobServiceClient, newPipeline) from '@azure/storage-blob':
+
+import (UploadDocumentsService) from './../../../app/upload-documents/shared/service/upload-documents.service': import (AbortController) from '@azure/abort-controller';
+
+import (UploadDelivery DocumentService from
+
+../../../..//app/upload-delivery-documents/shared/service/upload-delivery-document.service';
+
+import (switchMap, takeUntil) from 'rxjs/operators':
+
+import (Document FileStage from '../../../../app/upload-documents/shared/model/document-file-stage';
+
+import Delivery Document FileStage) from './../../../app/data-upload/shared/model/delivery-document-file-stage':
+
+import (VirusScanService) from '../../../../app/upload-documents/shared/service/virus-scan.service'; import (Branch Fragment Details) from 'arc/app/change-request/shared/model/branch-fragment-details':
+
+Component((
+
+selector: 'app-reusable-file-upload',
+
+templateUrl: /reusable-file-upload.component.html",
+
+styleUrls: [./reusable-file-upload.component.caa']
+
+export class ReusableFileUploadComponent implements OnInit [
+
+document File: any null:
+
+readonly STORAGE ACCOUNT 'storageAccount':
+
+readonly SAS sas':
+
+readonly CONTAINER NAME='containerName":
+
+@Output() document Files new Event Emitter<any>():
+
+@Output() virusScanBlobUrlResponce new Event Emitter<any>();
+
+@Output () document FileStageResponce new EventEmitter<any>();
+
+@Output() document FileStageErrorResponce new Event Emitter<any>():
+
+@Input() virusScanBlobUrl: string:
+
+Input() serviceName: string:
+
+Input() fileUploadUrlParams: HttpParama:
+
+Input() fileUploadUrl: string:
+
+@Input() statusCheckUrl: string:
+
+Input() fileUploadButtonStyle: string;
+
+Input() selectedFragmentDetails : Branch FragmentDetails:
+Input() context: string;
+
+document FileStage: Document FileStage
+
+new DeliveryDocument FileStage():
+
+isFileUploaded: boolean false:
+
+virusÜrlForSubscription: Subscription:
+
+fileUploadSubscription: Subscription:
+
+statusCheckInterval: Subscription:
+
+fileName: string:
+
+isFileUploadingStarted: boolean false;
+
+isFileVerificationStarted: boolean false;
+
+isValidationFailed: boolean false:
+
+showfileUploader: boolean true:
+
+isfileUploadCancelled false;
+
+document ScanDetails: any:
+
+showUploadOpt stue:
+
+showOther Properties false;
+
+saaToken: string:
+
+scanid: string;
+
+isStatusCheckStarted: boolean false:
+
+ISA:VirusScanEnabled: boolean false:
+
+inFileSizeMore Than4Mb: boolean falmer
+
+constructor (@Inject (HttpClient) private http: HttpClient, public configurationService: ConfigurationService,
+
+public uploadDocumentsService: UploadDocumentsService, public virusScanService: VirusScanService, public uploadDelivery Documentservice:
+
+UploadDeliveryDocumentService) (this.isArVirusScanEnabled
+
+this.configurationService.isFeatureEnabledByProperty('ar-real-time-virusscan")
+
+ngOnInit()
+
+this.isFileVerificationStarted - falser
+
+this.isValidationFailed falser
+
+this.isFileUploaded false:
+
+this.isFilellploadingStarted false this.showOther Properties falmer
+
+onDrop (event: any) (
+
+if (this.showFileUploader) ( event.preventDefault();
+
+event.stopPropagation(); $('fileupload').val("");
+
+this.fileName event.dataTransfer.files[0].name; this.documentFile event.dataTransfer.files[0]; this.documentFiles.emit(this.documentFile):
+
+this.isFileUploadingStarted = true;
+
+onDragover (evt) (
+
+if (this.showFileUploader) ( evt.preventDefault();
+
+evt.stopPropagation();
+
+onDragLeave (evt) [
+
+if (this.showFileUploader) ( evt.preventDefault();
+
+evt.stopPropagation();
+
+// method to take file from UI
+
+fileSelection(fileInput: any): void [ this.isFileSizeMore Than4Mb false if (fileInput.target.files[0]) ( this.fileName fileInput.target.files[0].name: this.documentFile fileInput.target.files[0]; ('#fileupload').val(""); this.isFileVerificationStarted false;
+
+this.isFileUploadingStarted = true;
+
+this.documentFiles.emit(this.documentFile):}}
+// generate the SAS token to upload file into blob
+
+getVirusScanBlobForScan() |
+
+if (this.documentFile.size 4194304)
+
+this.isFileSizeMore Than 4Mb true
+
+else
+
+this.virusuriForSubscription this.virusScanService.getVirusScanBlobUrl (this.virusScanBlobUrl, this.fileName).subscribe (response>一
+
+this.document ScanDetails response:
+
+this.virusScanBlobUrlResponce.emit(this.documentScanDetails):
+
+this.showUploadopt false;
+
+this.showOther Properties true;
+
+this.sasToken this.document ScanDetails.sasToken:
+
+this.acanld this.documentScanDetails.id:
+
+this.getRequiredParamaForBlobStorage(this.sasToken): let uploadParams
+
+this.uploadToBlobStore (uploadParams):
+
+(error) -> 1
+
+this.inFileUploadingStarted = false;
+
+11:
+
+GetRequiredParameForBlobStorage (sasToken: string): Mapcstring, string> [
+
+let uploadParams: Mapcstring, string> new MМарі
+
+(this. STORAGE ACCOUNT, sasToken.substring(sasToken.IndexOf('//3, sasToken.indexOf('.')
+
+[this.5A5, sasToken.substring(sasToken.indexOf()))
+
+this.CONTAINER NAME, sasToken.substring(sasToken.indexOf(.net/) 5, aasToken.lastIndexOf('$50')).replace(/5C/g,'/')]
+
+zeturn uploadParams:
+
+// Method to store file to blob store
+
+async uploadToBlobStore (uploadParama: Map<string, string>) (
+
+if (this.document File null) (
+
+const uploadChunksize this.configurationService.getFileUploadChunkSize()7
+
+const pipeline new Pipeline (new AnonymousCredential(), retryOptions: | maxTries: 41, // Retry options
+
+userAgentOptions: (userAgentPrefix: "Toolbox nMPT)// Customized telemetry string });
+
+const blobserviceClient pipeline new BlobServiceClient( https://4luploadParams.get(this.STORAGE ACCOUNT).blob.core.windows.net(uploadParams.get(this.SAS))",
+
+const containerClient blobferviceClient.getContainer Client (uploadParans.get(this.CONTAINER NAME)):
+
+const blockblobClient containerClient.getBlockBlobClient (this.document File.name):
+
+conat abortController new AbortController();
+
+// Parallel uploading a browser File/Blob/Arraybuffer in browsers with BlockBlobClient.uploadData()
+
+try
+
+this.isFileUploadCancelled falser
+
+this.isFileUploadingStarted = true: await blockblobClient.uploadData(this.document File, abortSignal: abortController.signal, blockSize: uploadChunk5ize 1024, concurrency: 20, onProgress: (ev) this.uploadDocumentaService.upload Progreas (lev.loadedBytes/ this.document.File.size) 100
+
+this.uploadDocumentFile():
+
+catch (err) ( abort was called on our abortSignal console.log('Operation was aborted by the user'
+
+if jerr.nameAbortError') (
+
+else console.error( uploadData failed, requestid (err.details.requestIdį, statusCode lerr.statusünde), errorCode (err.details.errorCode)}}}}}
+/ method to initiate the virus scan, check the virus scan is completed or not.
+
+uploadDocumentFile(): void {
+
+if (this.isFileUploadCancelled) {
+
+this.isFileUploadingStarted false;
+
+this.isFileVerificationStarted = true;
+
+//this will send the scanld, ChangeRequestId and fragmentld to the API for adding the scanld to the updateRevisedTable if (this.isArVirusScanEnabled 64 this.context 'Replace Fragment with PDF) (
+
+console.log("The change request Id is ", this.changeRequestId, The Fragment Id is", this.selectedFragmentDetails.fragment IdList (0),
+
+The context is ", this.context)
+
+this.uploadDocumentsService.updateRevisedContent (this.changeRequest Id, this.selected FragmentDetails.fragmentIdList[0], this.documentSc next: ()->(
+
+anDetails.id).subscribe({
+
+console.log("Updating revised content")
+
+J
+
+error: (error)=>(
+
+console.error("API call failed", error):
+
+const params: HttpParams(this.fileUploadUrlParams ?? new HttpParams()).append('serviceName', this.serviceName): this.fileUploadSubscription this.virusScanService.fileUploadDocument (this.fileUploadUrl, this documentScanDetails,
+
+params).subscribe((response: any) => 1
+
+this.statusCheckInterval this.virusScanService.startStatusChecking (this.statusCheckUrl, this.scanld).subscribe({
+
+next: (resp: any) -> (
+
+resp 7 this.isStatusCheckStarted true this.isStatusCheckStarted false:
+
+if (resp.body)
+
+1
+
+this.document FileStageResponce.emit(resp);
+
+this.statusCheckInterval?.unsubscribe();
+
+error: (error: any) >>
+
+1
+
+this.enableChangeButtion();
+
+this.document FileStageErrorResponce.emit(error):
+
+this.isFileVerificationStarted false:
+
+this.isValidationFailed = true:
+
+this.statusCheckInterval?.unsubscribe();
+
+this.fileUploadSubscription.unsubscribe():
+
+console.log(" file upload error")
+}}}}
+(error) => {
+
+this.documentFileStageErrorResponce.emit(error);
+
+});
+
+}
+
+enableChangeButtion() {
+
+this.showUpload0pt = true;
+
+this.showOther Properties = false;
+
+this.showFileUploader = true;
+
+this.isValidation Failed = false;
+
+}}
+
+ 
