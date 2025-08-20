@@ -47,3 +47,44 @@ private uploadSequentially(index: number): void {
     }
   });
 }
+
+
+
+
+fileSelection(event: any): void {
+  console.log("working");
+
+  this.isFileSizeMoreThan4Mb = false;
+
+  const files: FileList = event?.target?.files;
+  if (!files || files.length === 0) return;
+
+  this.selectedFiles = Array.from(files);
+
+  // Build display list
+  this.displayFiles = this.selectedFiles.map(file => ({
+    name: file.name,
+    type: file.type || 'Unknown',
+    size: file.size >= 1048576
+      ? (file.size / 1048576).toFixed(2) + ' MB'
+      : (file.size / 1024).toFixed(2) + ' KB',
+    status: 'Waiting for upload',
+  }));
+
+  // Calculate total size
+  this.totalSize = this.selectedFiles.reduce((sum, file) => sum + file.size, 0);
+  console.log(this.totalSize, "lets see");
+
+  if (this.totalSize / 1048576 >= 4) {
+    this.isFileSizeMoreThan4Mb = true;
+    this.showFileList = false;
+  } else {
+    this.showFileList = true;
+    this.showUploadOpt = false;
+  }
+
+  // 🔑 Emit each file sequentially so other logic works
+  this.selectedFiles.forEach(file => {
+    this.documentFiles.emit(file);
+  });
+} 
