@@ -88,3 +88,49 @@ fileSelection(event: any): void {
     this.documentFiles.emit(file);
   });
 } 
+
+
+
+onDrop(event: any): void {
+  if (!this.showFileUploader) return;
+
+  event.preventDefault();
+  event.stopPropagation();
+
+  this.isFileSizeMoreThan4Mb = false;
+  this.selectedFiles = [];
+
+  const files: FileList = event.dataTransfer?.files;
+  if (!files || files.length === 0) return;
+
+  this.selectedFiles = Array.from(files);
+
+  // Build display list for UI
+  this.displayFiles = this.selectedFiles.map(file => ({
+    name: file.name,
+    type: file.type || 'Unknown',
+    size: file.size >= 1048576
+      ? (file.size / 1048576).toFixed(2) + ' MB'
+      : (file.size / 1024).toFixed(2) + ' KB',
+    status: 'Waiting for upload',
+  }));
+
+  // Calculate total size
+  this.totalSize = this.selectedFiles.reduce((sum, file) => sum + file.size, 0);
+  console.log(this.totalSize, "lets see (drop)");
+
+  if (this.totalSize / 1048576 >= 4) {
+    this.isFileSizeMoreThan4Mb = true;
+    this.showFileList = false;
+  } else {
+    this.showFileList = true;
+    this.showUploadOpt = false;
+  }
+
+  // 🔑 Emit each file sequentially
+  this.selectedFiles.forEach(file => {
+    this.documentFiles.emit(file);
+  });
+
+  this.isFileUploadingStarted = true;
+} 
