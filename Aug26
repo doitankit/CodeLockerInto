@@ -1,0 +1,25 @@
+/* Wrapper for scroll */
+.table-wrapper {
+  max-height: 200px;   /* Adjust height as needed */
+  overflow-y: auto;    /* Vertical scroll */
+  overflow-x: hidden;  /* Prevent horizontal overflow */
+}
+
+/* Table adjustments */
+.table {
+  font-size: 0.85rem;     /* Smaller font size */
+  border-collapse: collapse;
+  width: 100%;
+}
+
+/* Remove only top and bottom borders */
+.table.table-bordered {
+  border-top: none !important;
+  border-bottom: none !important;
+}
+
+/* Optional: make rows look cleaner */
+.table td, .table th {
+  padding: 6px 10px;
+  vertical-align: middle;
+}
